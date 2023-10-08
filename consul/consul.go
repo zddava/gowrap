@@ -14,8 +14,7 @@ import (
 
 type (
 	ConsulClient struct {
-		Host string
-		Port int
+		ApiServiceBase string
 	}
 
 	ServiceInstance struct {
@@ -46,15 +45,11 @@ type (
 	}
 )
 
-func NewClient(host string, port int) *ConsulClient {
-	return &ConsulClient{
-		Host: host,
-		Port: port,
-	}
+func NewClient(apiService string) *ConsulClient {
+	return &ConsulClient{ApiServiceBase: apiService}
 }
 
-func (consulClient *ConsulClient) Register(serviceName, instanceId, healthCheckUrl string, instanceHost string, instancePort int, meta map[string]string, weights *Weights) error {
-
+func (client *ConsulClient) Register(serviceName, instanceId, healthCheckUrl string, instanceHost string, instancePort int, meta map[string]string, weights *Weights) error {
 	instance := &ServiceInstance{
 		ID:                instanceId,
 		Name:              serviceName,
@@ -85,7 +80,7 @@ func (consulClient *ConsulClient) Register(serviceName, instanceId, healthCheckU
 	}
 
 	req, err := http.NewRequest("PUT",
-		"http://"+consulClient.Host+":"+strconv.Itoa(consulClient.Port)+"/v1/agent/service/register",
+		client.ApiServiceBase+"/v1/agent/service/register",
 		bytes.NewReader(byteData))
 
 	if err != nil {
@@ -93,9 +88,9 @@ func (consulClient *ConsulClient) Register(serviceName, instanceId, healthCheckU
 	}
 
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
-	client := http.Client{}
-	client.Timeout = time.Second * 2
-	resp, err := client.Do(req)
+	httpClient := http.Client{}
+	httpClient.Timeout = time.Second * 2
+	resp, err := httpClient.Do(req)
 
 	if err != nil {
 		log.Printf("register service err : %s", err)
@@ -112,19 +107,18 @@ func (consulClient *ConsulClient) Register(serviceName, instanceId, healthCheckU
 	return nil
 }
 
-func (consulClient *ConsulClient) Deregister(instanceId string) error {
-	req, err := http.NewRequest("PUT",
-		"http://"+consulClient.Host+":"+strconv.Itoa(consulClient.Port)+"/v1/agent/service/deregister/"+instanceId, nil)
+func (client *ConsulClient) Deregister(instanceId string) error {
+	req, err := http.NewRequest("PUT", client.ApiServiceBase+"/v1/agent/service/deregister/"+instanceId, nil)
 
 	if err != nil {
 		log.Printf("req format err: %s", err)
 		return err
 	}
 
-	client := http.Client{}
-	client.Timeout = time.Second * 2
+	httpClient := http.Client{}
+	httpClient.Timeout = time.Second * 2
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 
 	if err != nil {
 		log.Printf("deregister service err : %s", err)
