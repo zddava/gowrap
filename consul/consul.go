@@ -2,7 +2,6 @@ package consul
 
 import (
 	"bytes"
-	"context"
 
 	"fmt"
 	"log"
@@ -54,7 +53,7 @@ func NewClient(host string, port int) *ConsulClient {
 	}
 }
 
-func (consulClient *ConsulClient) Register(ctx context.Context, serviceName, instanceId, healthCheckUrl string, instanceHost string, instancePort int, meta map[string]string, weights *Weights) error {
+func (consulClient *ConsulClient) Register(serviceName, instanceId, healthCheckUrl string, instanceHost string, instancePort int, meta map[string]string, weights *Weights) error {
 
 	instance := &ServiceInstance{
 		ID:                instanceId,
@@ -113,7 +112,7 @@ func (consulClient *ConsulClient) Register(ctx context.Context, serviceName, ins
 	return nil
 }
 
-func (consulClient *ConsulClient) Deregister(ctx context.Context, instanceId string) error {
+func (consulClient *ConsulClient) Deregister(instanceId string) error {
 	req, err := http.NewRequest("PUT",
 		"http://"+consulClient.Host+":"+strconv.Itoa(consulClient.Port)+"/v1/agent/service/deregister/"+instanceId, nil)
 
